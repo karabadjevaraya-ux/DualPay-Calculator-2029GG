@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="bg">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>DualPay - Калкулатор</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Comfortaa:wght@700&family=Montserrat:wght@400;600&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Montserrat', sans-serif;
+            background-color: #FEFCE8; /* Светло жълто */
+            overflow: hidden;
+            touch-action: manipulation;
+        }
+        h1, .font-comfortaa { font-family: 'Comfortaa', cursive; }
+        
+        /* Динамичен шахматен фон */
+        .bg-grid {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            display: grid;
+            grid-template-columns: repeat(6, 1fr);
+            z-index: -1;
+            opacity: 0.12;
+            padding: 10px;
+        }
+        .bg-symbol {
+            display: flex; justify-content: center; align-items: center;
+            font-size: 1.8rem; font-weight: bold; color: #1E40AF;
+            animation: float 10s infinite ease-in-out;
+        }
+        @keyframes float {
+            0%, 100% { transform: translate(0, 0) rotate(0deg) scale(1); }
+            33% { transform: translate(10px, -15px) rotate(5deg) scale(1.1); }
+            66% { transform: translate(-10px, 10px) rotate(-5deg) scale(0.9); }
+        }
+
+        .glass-card {
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(15px);
+            -webkit-backdrop-filter: blur(15px);
+            border: 1px solid rgba(255, 255, 255, 0.4);
+            box-shadow: 0 30px 60px -12px rgba(30, 64, 175, 0.15);
+        }
+
+        /* Комбинирано Лого */
+        .dual-logo {
+            width: 120px;
+            height: 60px;
+            display: flex;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            border: 2px solid white;
+        }
+        .logo-bg {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }
+        .bg-flag {
+            background: linear-gradient(to bottom, #FFFFFF 33.3%, #00966E 33.3%, #00966E 66.6%, #D62612 66.6%);
+        }
+        .eu-blue { background-color: #003399; }
+        
+        .segmented-control button.active {
+            background-color: #1E40AF;
+            color: white;
+        }
+    </style>
+</head>
+<body class="flex items-center justify-center min-h-screen p-4">
+
+    <div id="dynamic-bg" class="bg-grid"></div>
+
+    <main class="w-full max-w-md glass-card rounded-[2.5rem] p-8 space-y-6 relative">
+        
+        <div class="flex flex-col items-center space-y-3">
+            <div class="dual-logo">
+                <div class="logo-bg bg-flag">
+                    <svg viewBox="0 0 24 24" class="w-8 h-8 fill-yellow-500 drop-shadow-md">
+                        <path d="M7,20.5C7,20.5 3,18 3,13C3,10 6,8 8,8C8.5,8 9,8.1 9.5,8.3C10,7 11.5,6 13,6C15,6 16.5,7.5 16.8,9.5C18,10 19,11 19,12.5C19,14.5 17.5,16 15.5,16H7V20.5Z" style="display:none"></path>
+                        <path d="M12,2C10.89,2 10,2.89 10,4C10,4.55 10.22,5.05 10.59,5.42C9.11,6.5 8,8.11 8,10V12H6V10A2,2 0 0 0 4,8A2,2 0 0 0 2,10V18H4V22H6V18H8V22H10V18H12V22H14V18H16V22H18V18H20V10A8,8 0 0 0 12,2Z" transform="scale(0.8) translate(3,3)"></path>
+                    </svg>
+                </div>
+                <div class="logo-bg eu-blue">
+                    <span class="text-white text-2xl font-bold">€</span>
+                </div>
+            </div>
+            <h1 class="text-2xl font-comfortaa text-[#1E40AF]">DualPay</h1>
+        </div>
+
+        <div class="space-y-4">
+            <div>
+                <label class="block text-[10px] font-bold text-gray-400 mb-1 ml-2 uppercase tracking-widest">Сума за плащане</label>
+                <div class="flex space-x-2">
+                    <input type="number" id="billAmount" placeholder="0.00" 
+                        class="flex-1 p-4 rounded-2xl bg-gray-50/50 border-none focus:ring-2 focus:ring-[#1E40AF] text-lg font-semibold">
+                    <select id="billCurrency" class="p-4 bg-white rounded-2xl border-none shadow-sm font-bold text-[#1E40AF]">
+                        <option value="BGN">лв</option>
+                        <option value="EUR">€</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-[10px] font-bold text-gray-400 mb-1 ml-2 uppercase tracking-widest">Платено в лв</label>
+                    <input type="number" id="paidBGN" placeholder="0.00" 
+                        class="w-full p-4 rounded-2xl bg-gray-50/50 border-none focus:ring-2 focus:ring-[#1E40AF] text-lg">
+                </div>
+                <div>
+                    <label class="block text-[10px] font-bold text-gray-400 mb-1 ml-2 uppercase tracking-widest">Платено в €</label>
+                    <input type="number" id="paidEUR" placeholder="0.00" 
+                        class="w-full p-4 rounded-2xl bg-gray-50/50 border-none focus:ring-2 focus:ring-[#1E40AF] text-lg">
+                </div>
+            </div>
+        </div>
+
+        <div id="errorBox" class="hidden bg-red-50 text-red-600 p-4 rounded-2xl text-center font-bold text-sm border border-red-100">
+            Сумата е недостатъчна!
+        </div>
+
+        <div id="resultContainer" class="hidden space-y-4">
+            <div class="segmented-control flex p-1 bg-gray-100/50 rounded-xl">
+                <button onclick="setChangeCurrency('BGN')" id="btnBGN" class="active flex-1 py-2 rounded-lg text-[10px] font-bold uppercase">В левове</button>
+                <button onclick="setChangeCurrency('EUR')" id="btnEUR" class="flex-1 py-2 rounded-lg text-[10px] font-bold uppercase">В евро</button>
+            </div>
+
+            <div class="text-center p-6 bg-blue-50/50 rounded-[2rem] border border-blue-100/30">
+                <span class="block text-[#1E40AF]/60 text-[10px] uppercase font-bold tracking-tighter mb-1">Ресто за връщане</span>
+                <div id="mainChange" class="text-4xl font-bold text-[#1E40AF] tracking-tight">0.00 лв</div>
+                <div id="secondaryChange" class="text-xs text-[#1E40AF]/40 mt-1">еквивалент: 0.00 €</div>
+            </div>
+        </div>
+
+        <footer class="text-center space-y-1 pt-4 border-t border-gray-100">
+            <p class="text-[10px] text-gray-400 font-bold tracking-widest uppercase">Курс: 1 EUR = 1.95583 BGN</p>
+            <p class="text-[10px] text-[#1E40AF]/30 font-semibold uppercase tracking-widest italic">© Gemini</p>
+        </footer>
+    </main>
+
+    <script>
+        const RATE = 1.95583;
+        let targetCurrency = 'BGN';
+
+        // Шахматен фон
+        const bg = document.getElementById('dynamic-bg');
+        for (let i = 0; i < 48; i++) {
+            const div = document.createElement('div');
+            div.className = 'bg-symbol';
+            div.innerText = i % 2 === 0 ? '€' : 'лв';
+            div.style.animationDelay = `${(i * 0.1)}s`;
+            bg.appendChild(div);
+        }
+
+        const inputs = ['billAmount', 'billCurrency', 'paidBGN', 'paidEUR'];
+        inputs.forEach(id => document.getElementById(id).addEventListener('input', calculate));
+
+        function setChangeCurrency(curr) {
+            targetCurrency = curr;
+            document.getElementById('btnBGN').classList.toggle('active', curr === 'BGN');
+            document.getElementById('btnEUR').classList.toggle('active', curr === 'EUR');
+            calculate();
+        }
+
+        function calculate() {
+            const billVal = parseFloat(document.getElementById('billAmount').value) || 0;
+            const billCurr = document.getElementById('billCurrency').value;
+            const paidBGN = parseFloat(document.getElementById('paidBGN').value) || 0;
+            const paidEUR = parseFloat(document.getElementById('paidEUR').value) || 0;
+
+            const billInBGN = billCurr === 'EUR' ? billVal * RATE : billVal;
+            const totalPaidInBGN = paidBGN + (paidEUR * RATE);
+            const diffInBGN = totalPaidInBGN - billInBGN;
+
+            const errorBox = document.getElementById('errorBox');
+            const resultContainer = document.getElementById('resultContainer');
+
+            if (totalPaidInBGN < billInBGN - 0.001 && billInBGN > 0) {
+                errorBox.classList.remove('hidden');
+                resultContainer.classList.add('hidden');
+            } else if (billInBGN > 0) {
+                errorBox.classList.add('hidden');
+                resultContainer.classList.remove('hidden');
+                displayResults(diffInBGN);
+            } else {
+                resultContainer.classList.add('hidden');
+            }
+        }
+
+        function displayResults(diffInBGN) {
+            const diffInEUR = diffInBGN / RATE;
+            const mainEl = document.getElementById('mainChange');
+            const secEl = document.getElementById('secondaryChange');
+            if (targetCurrency === 'BGN') {
+                mainEl.innerText = `${diffInBGN.toFixed(2)} лв`;
+                secEl.innerText = `еквивалент: ${diffInEUR.toFixed(2)} €`;
+            } else {
+                mainEl.innerText = `${diffInEUR.toFixed(2)} €`;
+                secEl.innerText = `еквивалент: ${diffInBGN.toFixed(2)} лв`;
+            }
+        }
+
+        // PWA & Icon Setup
+        const manifest = {
+            "name": "DualPay Change Calculator",
+            "short_name": "DualPay",
+            "start_url": ".",
+            "display": "standalone",
+            "background_color": "#FEFCE8",
+            "theme_color": "#1E40AF",
+            "icons": [{ "src": "icon.png", "sizes": "512x512", "type": "image/png" }]
+        };
+        const manifestBlob = new Blob([JSON.stringify(manifest)], {type: 'application/json'});
+        document.head.appendChild(Object.assign(document.createElement('link'), {rel: 'manifest', href: URL.createObjectURL(manifestBlob)}));
+
+        // Генерация на икона за инсталация (с флага и еврото)
+        const canvas = document.createElement('canvas');
+        canvas.width = 512; canvas.height = 512;
+        const ctx = canvas.getContext('2d');
+        // Ляво - Флаг
+        ctx.fillStyle = "white"; ctx.fillRect(0,0,256,170);
+        ctx.fillStyle = "#00966E"; ctx.fillRect(0,170,256,171);
+        ctx.fillStyle = "#D62612"; ctx.fillRect(0,341,256,171);
+        // Дясно - ЕU
+        ctx.fillStyle = "#003399"; ctx.fillRect(256,0,256,512);
+        // Символи
+        ctx.fillStyle = "white"; ctx.font = "bold 200px Arial"; ctx.textAlign = "center";
+        ctx.fillText("€", 384, 320);
+        ctx.fillStyle = "#DAA520"; ctx.fillText("L", 128, 320); // Опростено за икона
+
+        document.head.appendChild(Object.assign(document.createElement('link'), {rel: 'icon', href: canvas.toDataURL()}));
+    </script>
+</body>
+</html>
